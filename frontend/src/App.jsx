@@ -11,7 +11,10 @@ import MyAppointments from './pages/MyAppointments'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Appointment from './pages/Appointment'
-import { ToastContainer, toast } from 'react-toastify'
+import { ToastContainer } from 'react-toastify'
+import PaymentSuccess from './pages/PaymentSuccess'
+import PaymentCancel from './pages/PaymentCancel'
+import MyMap from './components/MyMap'
 
 const App = () => {
   return (
@@ -28,6 +31,9 @@ const App = () => {
         <Route path='/my-profile' element={<MyProfile />} />
         <Route path='/my-appointments' element={<MyAppointments />} />
         <Route path='/appointment/:workerId' element={<Appointment />} />
+        <Route path='/payment-success' element={<PaymentSuccess />} />
+        <Route path='/payment-cancel' element={<PaymentCancel />} />
+        <Route path='/map' element={<MyMap />} />
       </Routes>
       <Footer />
     </div>

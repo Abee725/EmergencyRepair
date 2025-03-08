@@ -5,7 +5,6 @@ import { AppContext } from '../../context/AppContext'
 import { Bar, Pie } from 'react-chartjs-2'
 import { Chart, registerables } from 'chart.js'
 
-// Register Chart.js components
 Chart.register(...registerables)
 
 const Dashboard = () => {
@@ -124,15 +123,20 @@ const Dashboard = () => {
                 </div>
 
                 {item.cancelled ? (
-                  <p className='text-red-500 text-sm font-medium  px-3 py-1 rounded-md'>
-                    Cancelled
+                  <p className='text-red-400 text-xs font-medium'>
+                    {' '}
+                    Cancelled{' '}
+                  </p>
+                ) : item.isCompleted ? (
+                  <p className='text-green-400 text-xs font-medium'>
+                    Completed
                   </p>
                 ) : (
                   <img
                     onClick={() => cancelAppointment(item._id)}
-                    className='w-8 cursor-pointer hover:scale-110 transition-transform'
+                    className='w-10 cursor-pointer'
                     src={assets.cancel_icon}
-                    alt='Cancel'
+                    alt=''
                   />
                 )}
               </div>

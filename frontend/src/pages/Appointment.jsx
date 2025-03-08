@@ -6,6 +6,7 @@ import { assets } from '../assets/assets'
 import RelatedWorkers from '../components/RelatedWorkers'
 import { toast } from 'react-toastify'
 import axios from 'axios'
+import MyMap from '../components/MyMap'
 
 const Appointment = () => {
   const { workerId } = useParams()
@@ -120,6 +121,7 @@ const Appointment = () => {
       toast.error(error.message)
     }
   }
+
   useEffect(() => {
     fetchWorkerInfo()
   }, [workers, workerId])
@@ -131,6 +133,14 @@ const Appointment = () => {
   useEffect(() => {
     console.log(workerSlots)
   }, [workerSlots])
+
+  const defaultCoordinates = [7.714367258813064, 81.71008583782903]
+  const workerCoordinates = workerInfo
+    ? [
+        workerInfo.latitude || defaultCoordinates[0],
+        workerInfo.longitude || defaultCoordinates[1],
+      ]
+    : defaultCoordinates
 
   return (
     workerInfo && (
@@ -175,6 +185,13 @@ const Appointment = () => {
           </div>
         </div>
 
+        {/* Map showing worker's location */}
+        <div className='mt-4'>
+          <MyMap
+            latitude={workerCoordinates[0]}
+            longitude={workerCoordinates[1]}
+          />
+        </div>
         {/* Booking Slots */}
         <div className='sm:ml-72 sm:pl-4 mt-4 font-medium text-gray-700'>
           <p>Booking slots</p>
@@ -219,6 +236,7 @@ const Appointment = () => {
           </button>
         </div>
         {/* Listing workers */}
+
         <RelatedWorkers
           workerId={workerId}
           speciality={workerInfo.speciality}

@@ -69,6 +69,36 @@ const MyAppointments = () => {
       toast.error(error.message)
     }
   }
+
+  const initiatePayment = async (appointmentId, amount) => {
+    console.log(
+      `Initiating payment for appointment: ${appointmentId}, Amount: ${amount}`
+    )
+
+    try {
+      const { data } = await axios.post(
+        `${backendUrl}/api/user/create-session`,
+        { appointmentId, amount },
+        {
+          headers: {
+            token,
+          },
+        }
+      )
+
+      if (data.success && data.sessionId) {
+        // Redirect user to Stripe Checkout
+        window.location.href = data.url
+        console.log(data.url)
+      } else {
+        toast.error(data.message || 'Failed to create payment session.')
+      }
+    } catch (error) {
+      console.error('Payment Error:', error)
+      toast.error('Payment initiation failed.')
+    }
+  }
+
   useEffect(() => {
     if (token) {
       getUserAppointments()
@@ -113,13 +143,24 @@ const MyAppointments = () => {
 
             {/* Action Buttons */}
             <div className='flex flex-col space-y-2 mt-4 md:mt-0'>
-              {!item.cancelled && (
-                <button className='sm:min-w-48 border border-gray-300 bg-white text-gray-700 px-4 py-2 rounded hover:bg-primary hover:text-white'>
+              {!item.cancelled && !item.payment && !item.isCompleted && (
+                <button
+                  onClick={() =>
+                    initiatePayment(item._id, item.workerData.fees)
+                  }
+                  className='sm:min-w-48 border border-gray-300 bg-white text-gray-700 px-4 py-2 rounded hover:bg-primary hover:text-white'
+                >
                   Pay Online
                 </button>
               )}
 
-              {!item.cancelled && (
+              {!item.cancelled && item.payment && !item.isCompleted && (
+                <button className='sm:min-w-48 border border-green-500 text-green-500 px-4 py-2 rounded'>
+                  Payment Done
+                </button>
+              )}
+
+              {!item.cancelled && !item.isCompleted && (
                 <button
                   onClick={() => cancelAppointment(item._id)}
                   className='sm:min-w-48 border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-red-600 hover:text-white'
@@ -127,9 +168,15 @@ const MyAppointments = () => {
                   Cancel Appointment
                 </button>
               )}
-              {item.cancelled && (
-                <button className='sm:min-w-48 border border-red-500 text-red-500 px-4 py-2 rounded '>
-                  Appointment cancelled
+
+              {item.cancelled && !item.isCompleted && (
+                <button className='sm:min-w-48 border border-red-500 text-red-500 px-4 py-2 rounded'>
+                  Appointment Cancelled
+                </button>
+              )}
+              {item.isCompleted && (
+                <button className='sm:min-w-48 border border-green-500 text-green-500 px-4 py-2 rounded'>
+                  Completed
                 </button>
               )}
             </div>

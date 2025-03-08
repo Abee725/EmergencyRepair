@@ -18,6 +18,7 @@ const AppContextProvider = (props) => {
       const { data } = await axios.get(backendUrl + '/api/worker/list')
       if (data.success) {
         setWorkers(data.workers)
+        console.log(data.workers)
       } else {
         toast.error(data.message)
       }

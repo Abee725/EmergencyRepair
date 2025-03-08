@@ -5,7 +5,9 @@ import jwt from 'jsonwebtoken'
 import { v2 as cloudinary } from 'cloudinary'
 import workerModel from '../models/workerModel.js'
 import appointMentModel from '../models/appointmentModel.js'
-import razorpay from 'razorpay'
+import Stripe from 'stripe'
+
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
 //API to register
 const registerUser = async (req, res) => {
   try {
@@ -217,12 +219,80 @@ const cancelAppointment = async (req, res) => {
   }
 }
 
-const razorpayInstance = new razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
-})
-// api to make payment using razorpay
-const paymentRazorPay = async (params) => {}
+const createPaymentSession = async (req, res) => {
+  try {
+    const { amount, currency, appointmentId } = req.body
+
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('Stripe secret key is missing. Check your .env file.')
+    }
+
+    if (!amount || !appointmentId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Amount and appointmentId are required.',
+      })
+    }
+
+    // Create a checkout session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      line_items: [
+        {
+          price_data: {
+            currency: currency || 'usd',
+            product_data: {
+              name: 'Appointment Fee',
+            },
+            unit_amount: amount * 100, // Corrected multiplication for cents
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: `${process.env.CLIENT_URL}/payment-success?appointmentId=${appointmentId}`,
+      cancel_url: `${process.env.CLIENT_URL}/payment-cancel`,
+    })
+
+    console.log('Stripe Session Created:', session.id)
+    console.log('Checkout URL:', session.url)
+
+    res.json({ success: true, sessionId: session.id, url: session.url })
+  } catch (error) {
+    console.error('Stripe Payment Error:', error)
+
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, message: error.message })
+    }
+  }
+}
+
+const updatePayment = async (req, res) => {
+  try {
+    const { appointmentId, paymentStatus } = req.body
+
+    if (!appointmentId) {
+      return res.status(400).json({ message: 'Appointment ID is required' })
+    }
+
+    // Find the appointment and update payment status
+    const updatedAppointment = await appointMentModel.findByIdAndUpdate(
+      appointmentId,
+      { payment: paymentStatus },
+      { new: true }
+    )
+
+    if (!updatedAppointment) {
+      return res.status(404).json({ message: 'Appointment not found' })
+    }
+
+    res
+      .status(200)
+      .json({ message: 'Payment status updated', updatedAppointment })
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message })
+  }
+}
 
 export {
   registerUser,
@@ -232,4 +302,6 @@ export {
   bookAppointment,
   listAppointment,
   cancelAppointment,
+  createPaymentSession,
+  updatePayment,
 }

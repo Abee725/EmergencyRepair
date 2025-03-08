@@ -25,6 +25,7 @@
     "nodemon": "^3.1.9",
     "razorpay": "^2.9.5",
     "react-chartjs-2": "^5.3.0",
+    "stripe": "^17.6.0",
     "validator": "^13.12.0"
   }
 }
